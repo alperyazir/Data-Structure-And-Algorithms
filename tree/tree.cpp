@@ -122,7 +122,7 @@ void print(BST *root)
     if (root == nullptr)
         return;
     print(root->left);
-    cout << root->m_data << "\n";
+    cout << root->m_data << " ";
     print(root->right);
 }
 
@@ -155,12 +155,82 @@ void clear(BST *root)
     delete root;
 }
 
+void top_view(BST *root)
+{
+    /* implementation
+        Step 1: fill the vector<pair<int, int>> // node - level ( level in vertical order (root: 0, root->left: -1, root-> right: +1 ...) )
+        Step 2: fill the vector<int> level order by level order treversal (it will be used in the algorithm)
+        Step 3: sort the vector by level of nodes
+        Step 4: find the first element in the level order vector with same levels, and delete others
+    */
+
+    if (root == nullptr)
+        return;
+
+    vector<pair<int, int>> elems; // data, counter
+    deque<BST *> deq;
+    int counter = 0;
+    elems.push_back(make_pair(root->m_data, counter));
+    deq.push_back(root);
+    vector<int> level_order;
+
+    // Calculate the vector of nodes with levels
+    // Calculate the level order vector
+    while (!deq.empty())
+    {
+        auto it = find_if(begin(elems), end(elems), [=](auto &i) {
+            return i.first == deq.front()->m_data;
+        });
+        if (it != end(elems))
+            counter = it->second;
+        level_order.push_back(deq.front()->m_data);
+
+        if (deq.front()->left != NULL)
+        {
+            deq.push_back(deq.front()->left);
+
+            elems.push_back(make_pair(deq.front()->left->m_data, counter - 1));
+        }
+        if (deq.front()->right != NULL)
+        {
+            deq.push_back(deq.front()->right);
+            elems.push_back(make_pair(deq.front()->right->m_data, counter + 1));
+        }
+        deq.pop_front();
+    }
+    // sort it by levels
+    sort(begin(elems), end(elems), [](pair<int, int> &a1, pair<int, int> &a2) {
+        return a1.second < a2.second;
+    });
+    // Find top view nodes delete others
+    vector<int> v;
+    while (!elems.empty())
+    {
+        auto c = begin(elems)->second;
+
+        for (const auto &b : elems)
+        {
+            if (c == b.second)
+            {
+                v.push_back(b.first);
+            }
+        }
+        auto iter = find_first_of(begin(level_order), end(level_order), begin(v), end(v));
+        elems.erase(remove_if(begin(elems), end(elems), [=](auto i) { return i.second == c; }), end(elems));
+
+        v.clear();
+        cout << *iter << " ";
+    }
+    cout << "\n";
+}
+
 int main()
 {
+
     BST *root = nullptr;
     root = insert(root, 10);
     root = insert(root, 5);
-    root = insert(root, 5);
+    root = insert(root, 4);
     root = insert(root, 7);
     root = insert(root, 8);
     root = insert(root, 9);
@@ -171,7 +241,7 @@ int main()
     root = insert(root, 30);
     print(root);
 
-    cout << "--------------------\n";
+    cout << "\n--------------------\n";
     cout << "contains 7 ?: " << boolalpha << contains(root, 7) << "\n";
     cout << "contains 21 ?: " << boolalpha << contains(root, 21) << noboolalpha << "\n";
 
@@ -191,8 +261,10 @@ int main()
     cout << "--------------------\n";
     cout << "Height : " << height(root) << "\n";
 
-    cout << "--------------------\n";
+    cout << "--------------------\nLevel Order: ";
     print_level_order(root);
+    cout << "--------------------\nTop View: ";
+    top_view(root);
 
     cout << "--------------------\n";
     root = remove(root, 15);
