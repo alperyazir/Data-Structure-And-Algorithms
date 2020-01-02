@@ -2,4 +2,4 @@
 Personal exercises
 
 1- Linked List
-2 -Binary Search Tree
+2- Binary Search Tree
