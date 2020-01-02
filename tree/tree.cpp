@@ -224,6 +224,59 @@ void top_view(BST *root)
     cout << "\n";
 }
 
+/* Lowest Common Ancestor */
+BST *lca(BST *root, int v1, int v2)
+{
+    if (root == nullptr)
+        return root;
+
+    auto iter = root;
+    vector<BST *> path1;
+    vector<BST *> path2;
+
+    while (iter != nullptr)
+    {
+        if (v1 < iter->m_data)
+        {
+            path1.push_back(iter);
+            iter = iter->left;
+        }
+        else if (v1 > iter->m_data)
+        {
+            path1.push_back(iter);
+            iter = iter->right;
+        }
+        else
+        {
+            path1.push_back(iter);
+            break;
+        }
+    }
+
+    iter = root;
+    while (iter != nullptr)
+    {
+        if (v2 < iter->m_data)
+        {
+            path2.push_back(iter);
+            iter = iter->left;
+        }
+        else if (v2 > iter->m_data)
+        {
+            path2.push_back(iter);
+            iter = iter->right;
+        }
+        else
+        {
+            path2.push_back(iter);
+            break;
+        }
+    }
+
+    auto it = find_first_of(rbegin(path1), rend(path1), rbegin(path2), rend(path2));
+    return *it;
+}
+
 int main()
 {
 
@@ -269,6 +322,10 @@ int main()
     cout << "--------------------\n";
     root = remove(root, 15);
     print(root);
+
+    cout << "--------------------\n";
+    auto iter = lca(root, 9, 5);
+    cout << "LCA: " << iter->m_data << "\n";
 
     clear(root);
     return 0;
