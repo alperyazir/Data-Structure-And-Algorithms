@@ -1,5 +1,5 @@
-# Data-Structure-And-Algorithms
-Personal exercises
+# Data Structure And Algorithms
+Personal exercises :
 
 - Linked List
 
