@@ -1,6 +1,8 @@
 # Data-Structure-And-Algorithms
 Personal exercises
 
-1- Linked List
+- Linked List
 
-2- Binary Search Tree
+- Binary Search Tree
+
+- AVL Tree
