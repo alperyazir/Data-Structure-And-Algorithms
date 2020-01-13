@@ -1,272 +1,222 @@
-#include <bits/stdc++.h> 
-using namespace std; 
+#include <bits/stdc++.h>
+using namespace std;
 
-enum Color {RED, BLACK}; 
+enum Color
+{
+	BLACK,
+	RED
+};
+struct Node
+{
+	Node *parent;
+	Node *left;
+	Node *right;
+	int data;
+	Color color;
 
-struct Node 
-{ 
-	int data; 
-	bool color; 
-	Node *left, *right, *parent; 
+	Node(int data) : data(data), left(nullptr), right(nullptr), parent(nullptr), color(RED) {}
+};
 
-	// Constructor 
-	Node(int data) 
-	{ 
-	this->data = data; 
-	left = right = parent = NULL; 
-	this->color = RED; 
-	} 
-}; 
+Node *ROOT;
 
-// Class to represent Red-Black Tree 
-class RBTree 
-{ 
-private: 
-	Node *root; 
-protected: 
-	void rotateLeft(Node *&, Node *&); 
-	void rotateRight(Node *&, Node *&); 
-	void fixViolation(Node *&, Node *&); 
-public: 
-	// Constructor 
-	RBTree() { root = NULL; } 
-	void insert(const int &n); 
-	void inorder(); 
-	void levelOrder(); 
-}; 
+Node *insert(Node *root, Node *new_node)
+{
+	if (root == nullptr)
+	{
+		return new_node;
+	}
 
-// A recursive function to do level order traversal 
-void inorderHelper(Node *root) 
-{ 
-	if (root == NULL) 
-		return; 
+	if (new_node->data < root->data)
+	{
+		root->left = insert(root->left, new_node);
+		root->left->parent = root;
+	}
+	else if (new_node->data > root->data)
+	{
+		root->right = insert(root->right, new_node);
+		root->right->parent = root;
+	}
+	return root;
+}
 
-	inorderHelper(root->left); 
-	cout << root->data << " "; 
-	inorderHelper(root->right); 
-} 
+void ll_rotation(Node *node)
+{
+	Node *node_left = node->left;
+	Node *node_left_right = node_left->right;
 
-/* A utility function to insert a new node with given key 
-in BST */
-Node* BSTInsert(Node* root, Node *pt) 
-{ 
-	/* If the tree is empty, return a new node */
-	if (root == NULL) 
-	return pt; 
+	node_left->right = node;
+	node->left = node_left_right;
+	node->parent = node_left;
+	node_left->parent = node->parent;
+	if (node == ROOT)
+	{
+		ROOT = node_left;
+		ROOT->parent = nullptr;
+	}
+}
 
-	/* Otherwise, recur down the tree */
-	if (pt->data < root->data) 
-	{ 
-		root->left = BSTInsert(root->left, pt); 
-		root->left->parent = root; 
-	} 
-	else if (pt->data > root->data) 
-	{ 
-		root->right = BSTInsert(root->right, pt); 
-		root->right->parent = root; 
-	} 
+void lr_rotation(Node *node)
+{
+	Node *node_left = node->left;
+	Node *node_left_right = node_left->right;
 
-	/* return the (unchanged) node pointer */
-	return root; 
-} 
+	node_left->right = node_left_right->left;
+	node->left = node_left_right->right;
+	node_left_right->left = node_left;
+	node_left_right->right = node;
 
-// Utility function to do level order traversal 
-void levelOrderHelper(Node *root) 
-{ 
-	if (root == NULL) 
-		return; 
+	node_left_right->parent == node->parent;
+	node->parent = node_left_right;
+	node_left->parent = node_left_right;
+	node_left_right->left->parent = node_left;
+	node_left_right->right->parent = node;
 
-	std::queue<Node *> q; 
-	q.push(root); 
+	if (node == ROOT)
+	{
+		ROOT = node_left_right;
+		ROOT->parent = nullptr;
+	}
+}
+Node *rr_rotation(Node *node)
+{
+	Node *node_right = node->right;
+	Node *node_right_left = node_right->left;
 
-	while (!q.empty()) 
-	{ 
-		Node *temp = q.front(); 
-		cout << temp->data << " "; 
-		q.pop(); 
+	node_right->left = node;
+	node->right = node_right_left;
+	node->parent = node_right;
 
-		if (temp->left != NULL) 
-			q.push(temp->left); 
+	if (node == ROOT)
+	{
+		ROOT = node_right;
+		ROOT->parent = nullptr;
+	}
+	return node_right;
+}
 
-		if (temp->right != NULL) 
-			q.push(temp->right); 
-	} 
-} 
+Node *rl_rotation(Node *node)
+{
+	Node *node_right = node->right;
+	Node *node_right_left = node_right->left;
 
-void RBTree::rotateLeft(Node *&root, Node *&pt) 
-{ 
-	Node *pt_right = pt->right; 
+	node_right->left = node_right_left->right;
+	node->right = node_right_left->left;
+	node_right_left->right = node_right;
+	node_right_left->left = node;
 
-	pt->right = pt_right->left; 
+	node_right_left->parent = node->parent;
+	node->parent = node_right_left;
+	node_right->parent = node_right_left;
+	node_right_left->left->parent = node;
+	node_right_left->right->parent = node_right;
 
-	if (pt->right != NULL) 
-		pt->right->parent = pt; 
+	if (node == ROOT)
+	{
+		ROOT = node_right_left;
+		ROOT->parent = nullptr;
+	}
 
-	pt_right->parent = pt->parent; 
+	return node_right_left;
+}
+void fix_vilolation(Node *root, Node *new_node)
+{
+	Node *grandparent = nullptr;
+	Node *parent = nullptr;
+	while (new_node != root && new_node->parent->color == RED)
+	{
+		parent = new_node->parent;
+		grandparent = parent->parent;
+		if (parent == grandparent->left)
+		{
+			Node *uncle = grandparent->right;
+			if (uncle != nullptr && uncle->color == RED) // if uncle is not nullptr and RED -> Recoloring
+			{
+				grandparent->color = RED;
+				uncle->color = BLACK;
+				parent->color = BLACK;
+			}
+			else // if uncle is nullptr or Black -> Rotation
+			{
+				if (new_node == parent->left)
+				{
+					ll_rotation(grandparent);
+				}
+				else
+				{
+					lr_rotation(grandparent);
+				}
 
-	if (pt->parent == NULL) 
-		root = pt_right; 
-
-	else if (pt == pt->parent->left) 
-		pt->parent->left = pt_right; 
-
-	else
-		pt->parent->right = pt_right; 
-
-	pt_right->left = pt; 
-	pt->parent = pt_right; 
-} 
-
-void RBTree::rotateRight(Node *&root, Node *&pt) 
-{ 
-	Node *pt_left = pt->left; 
-
-	pt->left = pt_left->right; 
-
-	if (pt->left != NULL) 
-		pt->left->parent = pt; 
-
-	pt_left->parent = pt->parent; 
-
-	if (pt->parent == NULL) 
-		root = pt_left; 
-
-	else if (pt == pt->parent->left) 
-		pt->parent->left = pt_left; 
-
-	else
-		pt->parent->right = pt_left; 
-
-	pt_left->right = pt; 
-	pt->parent = pt_left; 
-} 
-
-// This function fixes violations caused by BST insertion 
-void RBTree::fixViolation(Node *&root, Node *&pt) 
-{ 
-	Node *parent_pt = NULL; 
-	Node *grand_parent_pt = NULL; 
-
-	while ((pt != root) && (pt->color != BLACK) && (pt->parent->color == RED)) 
-	{ 
-
-		parent_pt = pt->parent; 
-		grand_parent_pt = pt->parent->parent; 
-
-		/* Case : A 
-			Parent of pt is left child of Grand-parent of pt */
-		if (parent_pt == grand_parent_pt->left) 
-		{ 
-
-			Node *uncle_pt = grand_parent_pt->right; 
-
-			/* Case : 1 
-			The uncle of pt is also red 
-			Only Recoloring required */
-			if (uncle_pt != NULL && uncle_pt->color == RED) 
-			{ 
-				grand_parent_pt->color = RED; 
-				parent_pt->color = BLACK; 
-				uncle_pt->color = BLACK; 
-				pt = grand_parent_pt; 
-			} 
-
-			else
-			{ 
-				/* Case : 2 
-				pt is right child of its parent 
-				Left-rotation required */
-				if (pt == parent_pt->right) 
-				{ 
-					rotateLeft(root, parent_pt); 
-					pt = parent_pt; 
-					parent_pt = pt->parent; 
-				} 
-
-				/* Case : 3 
-				pt is left child of its parent 
-				Right-rotation required */
-				rotateRight(root, grand_parent_pt); 
-				swap(parent_pt->color, grand_parent_pt->color); 
-				pt = parent_pt; 
-			} 
-		} 
-
-		/* Case : B 
-		Parent of pt is right child of Grand-parent of pt */
+				swap(parent->color, grandparent->color);
+			}
+		}
 		else
-		{ 
-			Node *uncle_pt = grand_parent_pt->left; 
+		{
+			Node *uncle = grandparent->left;
+			if (uncle != nullptr && uncle->color == RED) // if uncle is not nullptr and RED -> Recoloring
+			{
+				grandparent->color = RED;
+				uncle->color = BLACK;
+				parent->color = BLACK;
+			}
+			else // if uncle is nullptr or Black -> Rotation
+			{
+				if (new_node == parent->right)
+				{
+					rr_rotation(grandparent);
+				}
+				else
+				{
+					grandparent = rl_rotation(grandparent);
+					
+				}
+				swap(parent->color, grandparent->color);
+				grandparent->parent->right = new_node;
+			}
+		}
+	}
+	ROOT->color = BLACK;
+}
+void insert_a_node(int val)
+{
+	Node *new_node = new Node(val);
+	ROOT = insert(ROOT, new_node);
+	fix_vilolation(ROOT, new_node);
+}
 
-			/* Case : 1 
-				The uncle of pt is also red 
-				Only Recoloring required */
-			if ((uncle_pt != NULL) && (uncle_pt->color == RED)) 
-			{ 
-				grand_parent_pt->color = RED; 
-				parent_pt->color = BLACK; 
-				uncle_pt->color = BLACK; 
-				pt = grand_parent_pt; 
-			} 
-			else
-			{ 
-				/* Case : 2 
-				pt is left child of its parent 
-				Right-rotation required */
-				if (pt == parent_pt->left) 
-				{ 
-					rotateRight(root, parent_pt); 
-					pt = parent_pt; 
-					parent_pt = pt->parent; 
-				} 
+void print_level_order()
+{
+	if (ROOT == NULL)
+		return;
+	deque<Node *> deq;
+	deq.push_back(ROOT);
+	while (!deq.empty())
+	{
+		cout << deq.front()->data << " ";
 
-				/* Case : 3 
-				pt is right child of its parent 
-				Left-rotation required */
-				rotateLeft(root, grand_parent_pt); 
-				swap(parent_pt->color, grand_parent_pt->color); 
-				pt = parent_pt; 
-			} 
-		} 
-	} 
+		if (deq.front()->left != NULL)
+			deq.push_back(deq.front()->left);
+		if (deq.front()->right != NULL)
+			deq.push_back(deq.front()->right);
+		deq.pop_front();
+	}
 
-	root->color = BLACK; 
-} 
+	cout << "\n";
+}
 
-// Function to insert a new node with given data 
-void RBTree::insert(const int &data) 
-{ 
-	Node *pt = new Node(data); 
+int main()
+{
 
-	// Do a normal BST insert 
-	root = BSTInsert(root, pt); 
+	insert_a_node(10);
+	insert_a_node(5);
+	insert_a_node(3);
+	insert_a_node(30);
+	insert_a_node(13);
+	insert_a_node(23);
+	insert_a_node(14);
+	insert_a_node(18);
+	insert_a_node(1);
+	insert_a_node(9);
 
-	// fix Red Black Tree violations 
-	fixViolation(root, pt); 
-} 
-
-// Function to do inorder and level order traversals 
-void RBTree::inorder()	 { inorderHelper(root);} 
-void RBTree::levelOrder() { levelOrderHelper(root); } 
-
-// Driver Code 
-int main() 
-{ 
-	RBTree tree; 
-
-	tree.insert(7); 
-	tree.insert(6); 
-	tree.insert(5); 
-	tree.insert(4); 
-	tree.insert(3); 
-	tree.insert(2); 
-	tree.insert(1); 
-
-	cout << "Inoder Traversal of Created Tree\n"; 
-	tree.inorder(); 
-
-	cout << "\n\nLevel Order Traversal of Created Tree\n"; 
-	tree.levelOrder(); 
-
-	return 0; 
-} 
+	print_level_order();
+	return 0;
+}
