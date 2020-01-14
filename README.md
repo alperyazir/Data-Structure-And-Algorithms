@@ -6,3 +6,5 @@ Personal exercises :
 - Binary Search Tree
 
 - AVL Tree
+
+- Red Black Tree
