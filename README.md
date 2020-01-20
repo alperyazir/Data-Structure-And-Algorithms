@@ -3,8 +3,12 @@ Personal exercises :
 
 - Linked List
 
-- Binary Search Tree
+- Tree
+  
+  - Binary Search Tree
 
-- AVL Tree
+  - AVL Tree
 
-- Red Black Tree
+  - Red Black Tree
+  
+- Heap
